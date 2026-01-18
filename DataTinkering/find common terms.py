@@ -1,18 +1,19 @@
-import pandas as pd
+import pickle
 import re
 import unicodedata
 from collections import defaultdict
 from multiprocessing import Pool, cpu_count
-import pickle
+
+import pandas as pd
 
 INPUT_CSV = "~/CSD/7ο εξ/IR/Greek_Parliament_Proceedings_1989_2020.csv"
 OUTPUT_FILE = "./DataTinkering/proposed_stopwords.txt"
 
 MAX_CPUS = 6
-CHUNK_SIZE = 50_000        # processes one CHUNK per CPU; make sure not to overload RAM
-CHECKPOINT_EVERY = 1000    # checkpoint every X chunks
-REPORT_EVERY = 1           # report progress every X chunks
-K = 5000                   # number of top terms to output
+CHUNK_SIZE = 50_000  # processes one CHUNK per CPU; make sure not to overload RAM
+CHECKPOINT_EVERY = 1000  # checkpoint every X chunks
+REPORT_EVERY = 1  # report progress every X chunks
+K = 5000  # number of top terms to output
 
 
 # Normalize the text. Each section of the code does a different type of normalization (lowercase, character-set, whitespace...)
@@ -36,6 +37,7 @@ def normalize_text(text):
 
     return text
 
+
 # Process one chunk of data. Chunk size defined at top of file.
 def process_chunk(df_chunk):
     local_df = defaultdict(int)
@@ -54,10 +56,12 @@ def process_chunk(df_chunk):
 
     return local_df, local_processed_docs
 
+
 # Merge local_df into global_df term by term
 def merge_df_dicts(global_df, local_df):
     for term, count in local_df.items():
         global_df[term] += count
+
 
 def compute_document_frequencies(reader):
     global_df = defaultdict(int)
@@ -84,6 +88,7 @@ def compute_document_frequencies(reader):
 
     return global_df, global_processed_docs
 
+
 # ============================================
 # ============= EXEC STARTS HERE =============
 # ============================================
@@ -91,15 +96,13 @@ def compute_document_frequencies(reader):
 reader = pd.read_csv(INPUT_CSV, chunksize=CHUNK_SIZE)
 df_counts, processed_docs = compute_document_frequencies(reader)
 
-sorted_terms = sorted(
-    df_counts.items(),
-    key=lambda x: x[1],
-    reverse=True
-)
+sorted_terms = sorted(df_counts.items(), key=lambda x: x[1], reverse=True)
 
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     f.write("term\tdocument_frequency\n")
     for term, df in sorted_terms[:K]:
         f.write(f"{term}\t{df}\n")
 
-print(f"Finished analysing {processed_docs:,} documents containing {len(df_counts):,} unique terms.")
+print(
+    f"Finished analysing {processed_docs:,} documents containing {len(df_counts):,} unique terms."
+)

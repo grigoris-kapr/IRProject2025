@@ -1,0 +1,26 @@
+# =========================
+# Stage 2: Python + Spark NLP
+# =========================
+FROM spark-runtime
+
+# Upgrade pip
+RUN pip3 install --upgrade pip
+
+# Python deps (this is what you'll change often)
+RUN pip3 install \
+	pyspark==3.5.0 \
+	spark-nlp \
+	pandas \
+	scikit-learn \
+	matplotlib \
+	tqdm \
+	nltk \
+	gensim \
+	spacy \
+	nlu \ 
+	ipykernel
+
+# Workspace
+WORKDIR /workspace
+
+CMD ["bash"]
