@@ -1,0 +1,10 @@
+{
+  "name": "chart-wasm-js",
+  "version": "1.1.0",
+  "customFields": {},
+  "devDependencies": {},
+  "dependencies": {},
+  "peerDependencies": {},
+  "optionalDependencies": {},
+  "bundledDependencies": []
+}
