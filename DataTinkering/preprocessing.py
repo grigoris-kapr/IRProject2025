@@ -4,6 +4,9 @@ import unicodedata
 from collections import defaultdict
 from multiprocessing import Pool, cpu_count
 import pickle
+import spacy
+
+nlp = None
 
 INPUT_CSV = "~/CSD/7ο εξ/IR/Greek_Parliament_Proceedings_1989_2020.csv"
 OUTPUT_CSV = "~/CSD/7ο εξ/IR/normalized_proceedings.csv"
@@ -47,6 +50,14 @@ def normalize_text(text):
 
     return text
 
+def lemmatize_text(text):
+    doc = nlp(text)
+    return " ".join(
+        token.lemma_
+        for token in doc
+        if not token.is_space
+    )    
+
 def removeCommonWords(text, commonWordsSet):
     if not text:
         return ""
@@ -58,10 +69,12 @@ def removeCommonWords(text, commonWordsSet):
 
 def preprocess_speech(text, commonWordsSet):
     text = normalize_text(text)
+    text = lemmatize_text(text)
     text = removeCommonWords(text, commonWordsSet)
     return text
 
 def process_chunk(df_chunk):
+
     # filter rows without assigned member 
     df_chunk = df_chunk[df_chunk.iloc[:, 0].notna()].copy()
 
@@ -70,17 +83,33 @@ def process_chunk(df_chunk):
 
     # 2. format text (in last column)
     speech_col = df_chunk.columns[-1]
-    df_chunk[speech_col] = df_chunk[speech_col].apply(preprocess_speech, args=(commonWordsSet,))
+    df_chunk[speech_col] = df_chunk[speech_col].apply(
+        preprocess_speech, 
+        args=(commonWordsSet,)
+    )
 
     # some speaches contain only common words. filter those rows
     df_chunk = df_chunk[df_chunk[speech_col].str.len() > 0].copy()
 
     return df_chunk
 
+def init_worker():
+    # =============================================
+    # ============ FOR LEMMATIZATION ==============
+    # =============================================
+    global nlp
+    nlp = spacy.load(
+        "el_core_news_md",
+        disable=["parser", "ner"] # only want spacy for lemma
+    )
+
 commonWordsSet = loadCommonWords()
 
 reader = pd.read_csv(INPUT_CSV, chunksize=CHUNK_SIZE)
-with Pool(processes=min(MAX_CPUS, cpu_count())) as pool:
+with Pool(
+    processes=min(MAX_CPUS, cpu_count()), 
+    initializer=init_worker
+) as pool:
     for i, res in enumerate(pool.imap_unordered(process_chunk, reader), start=1):
         if res.empty:
                 continue

@@ -1,5 +1,5 @@
 {
-	"name": "spark-nlp-devv",
+	"name": "spark-nlp-dev",
 	"build": {
 		"dockerfile": "../Dockerfile.dev"
 	},

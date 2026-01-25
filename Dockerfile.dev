@@ -8,17 +8,19 @@ RUN pip3 install --upgrade pip
 
 # Python deps (this is what you'll change often)
 RUN pip3 install \
+	ipykernel \
 	pyspark==3.5.0 \
 	spark-nlp \
 	pandas \
 	scikit-learn \
-	matplotlib \
 	tqdm \
-	nltk \
 	gensim \
-	spacy \
-	nlu \ 
-	ipykernel
+	fastapi \
+	uvicorn \ 
+	pydantic
+
+# Setup port for FastAPI
+EXPOSE 8000
 
 # Workspace
 WORKDIR /workspace

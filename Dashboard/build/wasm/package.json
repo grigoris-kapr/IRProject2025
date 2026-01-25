@@ -1,0 +1,20 @@
+{
+  "name": "dashboard",
+  "version": "unspecified",
+  "private": true,
+  "workspaces": [
+    "packages\\dashboard-composeApp",
+    "packages\\dashboard-composeApp-test",
+    "packages_imported/skiko-wasm-js/0.9.37-3",
+    "packages_imported/skiko-js-wasm-runtime/0.9.37-3",
+    "packages_imported/Kotlin-DateTime-library-kotlinx-datetime-wasm-js/0.7.1",
+    "packages_imported/chart-wasm-js/1.1.0",
+    "packages_imported/ktor-ktor-client-core/3.4.0"
+  ],
+  "devDependencies": {},
+  "dependencies": {},
+  "peerDependencies": {},
+  "optionalDependencies": {},
+  "bundledDependencies": [],
+  "resolutions": {}
+}

@@ -1,10 +1,12 @@
 [versions]
 androidx-lifecycle = "2.9.6"
 composeMultiplatform = "1.10.0"
-junit = "4.13.2"
 kotlin = "2.3.0"
 material3 = "1.10.0-alpha05"
 vico = "2.4.0-beta.1"
+
+kotlinxSerializationJson = "1.8.1"
+ktor = "3.4.0"
 
 
 [libraries]
@@ -17,6 +19,13 @@ compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMul
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 vico-multiplatform = { group = "com.patrykandpatrick.vico", name = "multiplatform-wasm-js", version.ref = "vico" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-wasm = { module = "io.ktor:ktor-client-js-wasm-js", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 
 [plugins]
