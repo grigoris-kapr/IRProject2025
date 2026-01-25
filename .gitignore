@@ -5,3 +5,7 @@ DataTinkering/proposed_stopwords.txt
 .vscode/settings.json
 Greek_Parliament_Proceedings_1989_2020
 dataset/*
+models
+ir-project-greek-parliament-2025-2026.pdf
+.idea
+spark_nlp_cache
