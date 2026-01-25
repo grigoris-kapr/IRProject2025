@@ -1,10 +1,13 @@
 Build the Docker images:
 
-Base image for Spark NLP
-docker build -f Dockerfile.spark -t spark-runtime .  
+Base image for Spark NLP:
 
-Development image from base image that installs python dependencies
-docker build -f Dockerfile.dev -t spark-nlp-dev .
+`docker build -f Dockerfile.spark -t spark-runtime .`
 
-Runs the backend server
-uvicorn backend:app --reload
+Development image from base image that installs python dependencies:
+
+`docker build -f Dockerfile.dev -t spark-nlp-dev .`
+
+Runs the backend server:
+
+`uvicorn backend:app --reload`

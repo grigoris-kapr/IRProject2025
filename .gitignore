@@ -1,10 +1,14 @@
-DataTinkering/df_checkpoint.pkl
-DataTinkering/lsi.model
-DataTinkering/lsi.model.projection
-DataTinkering/proposed_stopwords.txt
+src/DataTinkering/df_checkpoint.pkl
+src/DataTinkering/lsi.model
+src/DataTinkering/lsi.model.projection
+src/DataTinkering/proposed_stopwords.txt
 .vscode/settings.json
-dataset
-spark_nlp_cache
+
+src/dataset
 ir-project-greek-parliament-2025-2026.pdf
-models
-.idea
+
+# I only need the pipeline folder and the index folder without its contents from inside the models folder
+src/models/index/*
+src/models/*
+!src/models/index
+!src/models/sparknlp_pipeline
