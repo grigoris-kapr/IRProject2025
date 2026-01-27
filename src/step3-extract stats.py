@@ -1,7 +1,7 @@
 from gensim import corpora, models, similarities
 import pandas as pd
 
-N_ROWS = None
+N_ROWS = 100_000
 # Load data and models
 dataset = pd.read_csv("dataset/clean.csv", index_col=0, nrows=N_ROWS)
 
@@ -50,12 +50,16 @@ import matplotlib.pyplot as plt
 
 lsi_speeches = lsi_model.projection.u
 
+# Drop to 3D by selecting some LSI dimensions
+# 4, 5,8
+lsi_speeches = lsi_speeches[:, [2,3,4,5,6,8]]
+
 # Drop to 3D using PCA
 pca = sklearn.decomposition.PCA(n_components=3)
 lsi_speeches = pca.fit_transform(lsi_speeches)
 
 # k-means to standard clusters
-num_clusters = 20
+num_clusters = 10
 kmeans = sklearn.cluster.KMeans(n_clusters=num_clusters, random_state=42)
 kmeans.fit(lsi_speeches)
 labels = kmeans.labels_
