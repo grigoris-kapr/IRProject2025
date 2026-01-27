@@ -5,7 +5,7 @@ from tqdm import tqdm
 tqdm.pandas()
 
 INPUT_CSV = "dataset/clean.csv"
-N_ROWS = 100_000
+N_ROWS = None
 
 dataframe = pd.read_csv(INPUT_CSV, index_col=0, nrows=N_ROWS)
 size = len(dataframe)
@@ -14,7 +14,7 @@ def token_stream():
     for speech in dataframe.clean_speech:
         tokens = speech.split()
         yield tokens
-        
+
 try:
     dictionary = corpora.Dictionary.load("models/greek.dict")
     print("Dictionary loaded from file.")

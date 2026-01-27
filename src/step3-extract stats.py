@@ -1,7 +1,7 @@
 from gensim import corpora, models, similarities
 import pandas as pd
 
-N_ROWS = 100_000
+N_ROWS = None
 # Load data and models
 dataset = pd.read_csv("dataset/clean.csv", index_col=0, nrows=N_ROWS)
 
@@ -54,8 +54,8 @@ lsi_speeches = lsi_model.projection.u
 pca = sklearn.decomposition.PCA(n_components=3)
 lsi_speeches = pca.fit_transform(lsi_speeches)
 
-# k-means to 1/1000 of the data
-num_clusters = N_ROWS // 10000
+# k-means to standard clusters
+num_clusters = 20
 kmeans = sklearn.cluster.KMeans(n_clusters=num_clusters, random_state=42)
 kmeans.fit(lsi_speeches)
 labels = kmeans.labels_
