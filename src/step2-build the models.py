@@ -5,7 +5,7 @@ from tqdm import tqdm
 tqdm.pandas()
 
 INPUT_CSV = "dataset/clean.csv"
-N_ROWS = 10_000
+N_ROWS = 100_000
 
 dataframe = pd.read_csv(INPUT_CSV, index_col=0, nrows=N_ROWS)
 size = len(dataframe)
