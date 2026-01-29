@@ -1,8 +1,9 @@
 LSI ✅
 
-Top topics
+Top topics ✅
+Clustering στα reduced ✅
 
-Clustering στα reduced
+Fine tune for better topics + clustering
 
 Για κάθε ομιλητή βρίσκω το average των ομιλιών του και βρίσκω top k ζεύγη ομιλητών με την μεγαλύτερη ομοιότητα
 
