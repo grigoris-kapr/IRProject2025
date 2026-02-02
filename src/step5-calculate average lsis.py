@@ -13,22 +13,43 @@ def dense_lsi(lsi_vector):
 		dense_vector[idx] = value
 	return dense_vector
 
-average_vectors = defaultdict(list)
+average_vectors = defaultdict(
+     lambda: (np.zeros(models.lsi.num_topics), 0)
+)
 
-group = models.dataset.groupby(['member_name', 'government', 'political_party'], sort=False)
-for (member_name, government, political_party), group_rows in tqdm(group):
-    lsi_vectors = []
-    for idx, row in group_rows.iterrows():
-        bow = models.corpus[idx]
-        if not bow:
-            continue
-        tfidf_vector = models.tfidf[bow]
-        lsi_vector = models.lsi[tfidf_vector]
-        dense_vector = dense_lsi(lsi_vector)
-        lsi_vectors.append(dense_vector)
-    if lsi_vectors:
-        average_vector = np.mean(lsi_vectors, axis=0)
-        average_vectors[(member_name, government, political_party)] = average_vector
+for idx, row in tqdm(models.dataset.iterrows(), total=len(models.dataset)):
+    member_name = row['member_name']
+    government = row['government']
+    political_party = row['political_party']
+    bow = models.corpus[idx]
+    if not bow:
+        continue
+    tfidf_vector = models.tfidf[bow]
+    lsi_vector = models.lsi[tfidf_vector]
+    dense_vector = dense_lsi(lsi_vector)
+    old_vector, count = average_vectors[(member_name, government, political_party)]
+    average_vectors[(member_name, government, political_party)] = (old_vector + dense_vector , count + 1)
+
+average_vectors = {
+      (member_name, government, political_party): avg_vector / count
+      for (member_name, government, political_party), (avg_vector, count) in average_vectors.items()
+      if count > 0
+}
+
+# group = models.dataset.groupby(['member_name', 'government', 'political_party'], sort=False)
+# for (member_name, government, political_party), group_rows in tqdm(group):
+#     lsi_vectors = []
+#     for idx, row in group_rows.iterrows():
+#         bow = models.corpus[idx]
+#         if not bow:
+#             continue
+#         tfidf_vector = models.tfidf[bow]
+#         lsi_vector = models.lsi[tfidf_vector]
+#         dense_vector = dense_lsi(lsi_vector)
+#         lsi_vectors.append(dense_vector)
+#     if lsi_vectors:
+#         average_vector = np.mean(lsi_vectors, axis=0)
+#         average_vectors[(member_name, government, political_party)] = average_vector
     
 average_vectors_df = pd.DataFrame([
     {

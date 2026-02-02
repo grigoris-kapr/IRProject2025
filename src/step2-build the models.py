@@ -1,22 +1,17 @@
-import csv
 import pandas as pd
 from gensim import corpora, models, similarities
 from tqdm import tqdm
 
 tqdm.pandas()
 
-INPUT_CSV = "src/dataset/clean.csv"
-OUTPUT_CSV = "src/dataset/keywords.csv"
+INPUT_PARQUET = "src/dataset/clean.parquet"
 
-N_ROWS = 100_000
-
-dataframe = pd.read_csv(INPUT_CSV, index_col=0)
+dataframe = pd.read_parquet(INPUT_PARQUET, columns=['clean_speech'])
 size = len(dataframe)
 
 def token_stream():
     for speech in dataframe.clean_speech:
-        tokens = speech.split()
-        yield tokens
+        yield speech.split(" ")
 
 try:
     dictionary = corpora.Dictionary.load("src/models/greek.dict")
@@ -28,15 +23,6 @@ except FileNotFoundError:
         dictionary.add_documents([tokens])
 
     FILTER_PERCENTAGE = 0.05
-    
-    # Write to a csv the tokens that appear in more than 5% of the documents
-    with open("src/dataset/filtered_tokens.csv", "w", encoding="utf-8", newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(["token"])
-        for token_id, doc_freq in dictionary.dfs.items():
-            if doc_freq > FILTER_PERCENTAGE * size:
-                print(f"Filtering out token: {dictionary[token_id]} with doc freq: {doc_freq}")
-                writer.writerow([dictionary[token_id]])
 
     dictionary.filter_extremes(no_above=FILTER_PERCENTAGE)
     dictionary.compactify()
@@ -51,7 +37,7 @@ class BowCorpus:
             yield self.dictionary.doc2bow(tokens)
 
     def __getitem__(self, index):
-        tokens = dataframe.clean_speech[index].split()
+        tokens = dataframe.clean_speech[index].split(" ")
         return self.dictionary.doc2bow(tokens)
     
 corpus = BowCorpus(dictionary)
@@ -87,10 +73,10 @@ except FileNotFoundError:
     index.save("src/models/index/greek.lsi")
 
 
-# Extract most important topics from LSI model
-topic_scores = [(index, score) for index, score in enumerate(lsi_model.projection.s)]
-topic_scores.sort(key=lambda x: abs(x[1]), reverse=True)
-print("Most important topics by score:")
-for topic_id, score in topic_scores[:10]:
-    topic_str = " ".join(word for word, _ in lsi_model.show_topic(topic_id))
-    print(f"\tTopic {topic_id}: {score:.4f} : {topic_str}")
+# # Extract most important topics from LSI model
+# topic_scores = [(index, score) for index, score in enumerate(lsi_model.projection.s)]
+# topic_scores.sort(key=lambda x: abs(x[1]), reverse=True)
+# print("Most important topics by score:")
+# for topic_id, score in topic_scores[:10]:
+#     topic_str = " ".join(word for word, _ in lsi_model.show_topic(topic_id))
+#     print(f"\tTopic {topic_id}: {score:.4f} : {topic_str}")

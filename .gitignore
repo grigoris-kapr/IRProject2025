@@ -4,8 +4,8 @@ src/DataTinkering/lsi.model.projection
 src/DataTinkering/proposed_stopwords.txt
 .vscode/settings.json
 
-src/stats
-src/dataset
-src/models
+src/stats/*
+src/dataset/*
+src/models/index/*.lsi*
 
 ir-project-greek-parliament-2025-2026.pdf

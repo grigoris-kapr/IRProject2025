@@ -6,12 +6,12 @@ from sparknlp.base import LightPipeline, PipelineModel
 
 class Models:
 	def __init__(self):
-		DATASET_CSV = "src/dataset/clean.csv"
-		KEYWORDS_CSV = "src/stats/keywords.csv"
+		DATASET_PARQUET = "src/dataset/clean.parquet"
+		KEYWORDS_PARQUET = "src/stats/keywords.parquet"
 		LSI_VECTORS_PARQUET = "src/dataset/average_member_government_party_lsi_vectors.parquet"
 
-		self.dataset = pd.read_csv(DATASET_CSV, index_col=0)
-		self.keywords = pd.read_csv(KEYWORDS_CSV, index_col=0)
+		self.dataset = pd.read_parquet(DATASET_PARQUET)
+		self.keywords = pd.read_parquet(KEYWORDS_PARQUET)
 		self.lsis = pd.read_parquet(LSI_VECTORS_PARQUET)
 		self.spark = sparknlp.start()
 		self.light_pipeline = LightPipeline(PipelineModel.load("src/models/sparknlp_pipeline"))
