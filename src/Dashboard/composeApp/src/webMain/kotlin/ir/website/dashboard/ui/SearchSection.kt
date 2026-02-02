@@ -19,8 +19,6 @@ fun SearchSection(
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(vertical = 16.dp)
     ) {
         SearchField(
             searchQuery = state.searchQuery,

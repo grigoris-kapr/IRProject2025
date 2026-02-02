@@ -1,51 +1,98 @@
-from gensim import corpora, models, similarities
+from src.Models import Models
 import pandas as pd
-import sparknlp
-from sparknlp.base import LightPipeline, PipelineModel
+import heapq
+import numpy as np
 
 class QueryHandler:
 	def __init__(self):
-		self.dataset = pd.read_csv("dataset/clean.csv", index_col=0, nrows=10_000)
-		self.spark = sparknlp.start()
-		self.light_pipeline = LightPipeline(PipelineModel.load("models/sparknlp_pipeline"))
-		try:
-			self.dictionary = corpora.Dictionary.load("models/greek.dict")
-			print("Dictionary loaded from file.")
-		except FileNotFoundError:
-			raise Exception("Dictionary file not found. Please build the models first.")
+		self.models = Models()
 
-		try:
-			self.tfidf_model = models.TfidfModel.load("models/greek.tfidf")
-			print("TF-IDF model loaded from file.")
-		except FileNotFoundError:
-			raise Exception("TF-IDF model file not found. Please build the models first.")
-
-		try:
-			self.lsi_model = models.LsiModel.load("models/greek.lsi")
-			print("LSI model loaded from file.")
-		except FileNotFoundError:
-			raise Exception("LSI model file not found. Please build the models first.")
-
-		try:
-			self.index = similarities.Similarity.load("models/index/greek.lsi", mmap='r')
-			print("Similarity index loaded from file.")
-		except FileNotFoundError:
-			raise Exception("Similarity index file not found. Please build the models first.")
+	def get_keywords_for_index(self, index):
+		if index in self.models.keywords.index:
+			row = self.models.keywords.loc[index]
+			keywords = row['keywords'].split("|") if pd.notna(row['keywords']) else []
+			return keywords
+		else:
+			return []
 		
-	def query(self, query_text):
-		processed_query = self.light_pipeline.annotate(query_text)["lemma"]
-		query_bow = self.dictionary.doc2bow(processed_query)
-		query_tfidf = self.tfidf_model[query_bow]
-		query_lsi = self.lsi_model[query_tfidf]
+	def get_relevant_documents(self, query_text):
+		processed_query = self.models.light_pipeline.annotate(query_text)["clean_lemma"]
+		query_bow = self.models.dictionary.doc2bow(processed_query)
+		query_tfidf = self.models.tfidf[query_bow]
+		query_lsi = self.models.lsi[query_tfidf]
 		
 		results = []
-		for doc_position, doc_score in self.index[query_lsi]:
-			speech_text = self.dataset.speech[doc_position]
-			results.append(speech_text)
+		for doc_position, _ in self.models.index[query_lsi]:
+			speech = self.models.dataset.speech[doc_position]
+			keywords = self.get_keywords_for_index(doc_position)
+			results.append((speech, keywords))
 		
 		return results
+	
+	def get_keywords_for_member(self, member_name):
+		member_rows = self.models.keywords[self.models.keywords['member_name'] == member_name]
+		grouped = member_rows.groupby('government', sort = False)
+		result = {}
+		for government, group in grouped:
+			heap = []
+			for _, row in group.iterrows():
+				if pd.notna(row['keywords']) and pd.notna(row['keyword_scores']):
+					keywords = row['keywords'].split("|")
+					scores = list(map(float, row['keyword_scores'].split("|")))
+					for keyword, score in zip(keywords, scores):
+						heapq.heappush(heap, (-score, keyword))  # Use negative score for max-heap behavior
+			top_keywords = []
+			seen = set()
+			while heap and len(top_keywords) < 5:
+				score, keyword = heapq.heappop(heap)
+				if keyword not in seen:
+					seen.add(keyword)
+					top_keywords.append(keyword)
 
-qh = QueryHandler()
-results = qh.query("Παράδειγμα ερώτησης για αναζήτηση.")
-for res in results[:5]:
-	print(res)
+			result[government] = top_keywords
+
+		return result
+	
+	def get_keywords_for_party(self, political_party):
+		party_rows = self.models.keywords[self.models.keywords['political_party'] == political_party]
+		grouped = party_rows.groupby('government', sort = False)
+		result = {}
+		for government, group in grouped:
+			heap = []
+			for _, row in group.iterrows():
+				if pd.notna(row['keywords']) and pd.notna(row['keyword_scores']):
+					keywords = row['keywords'].split("|")
+					scores = list(map(float, row['keyword_scores'].split("|")))
+					for keyword, score in zip(keywords, scores):
+						heapq.heappush(heap, (-score, keyword))  # Use negative score for max-heap behavior
+			top_keywords = []
+			seen = set()
+			while heap and len(top_keywords) < 5:
+				score, keyword = heapq.heappop(heap)
+				if keyword not in seen:
+					seen.add(keyword)
+					top_keywords.append(keyword)
+
+			result[government] = top_keywords
+
+		return result
+
+	def get_member_errors(self, member_name):
+		member_lsi_rows = self.models.lsis[self.models.lsis['member_name'] == member_name]
+
+		errors = {}
+		for _, row in member_lsi_rows.iterrows():
+			government = row['government']
+			party = row['political_party']
+			member_vector = np.array(row['average_lsi_vector'])
+			
+			government_party_rows = self.models.lsis[(self.models.lsis['government'] == government) & (self.models.lsis['political_party'] == party)]
+			vectors = []
+			for _, group in government_party_rows.iterrows():
+				vectors.append(np.array(group["average_lsi_vector"]))
+			if vectors:
+				mean_vector = np.mean(vectors, axis=0)
+				error = np.linalg.norm(member_vector - mean_vector)
+				errors[government] = error.item()
+				
+		return errors

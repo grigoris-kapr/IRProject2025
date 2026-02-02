@@ -1,7 +1,7 @@
 {
 	"name": "spark-nlp-dev",
 	"build": {
-		"dockerfile": "../Dockerfile.dev"
+		"dockerfile": "../src/Dockerfile.dev"
 	},
 	"workspaceFolder": "/workspace",
 	"mounts": [

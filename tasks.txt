@@ -5,11 +5,11 @@ Clustering στα reduced ✅
 
 Fine tune for better topics + clustering
 
-Για κάθε ομιλητή βρίσκω το average των ομιλιών του και βρίσκω top k ζεύγη ομιλητών με την μεγαλύτερη ομοιότητα
+Για κάθε ομιλητή βρίσκω το average των ομιλιών του και βρίσκω top k ζεύγη ομιλητών με την μεγαλύτερη ομοιότητα ✅
 
-Top keywords by speech (tfidf)
-Top keywords by speaker through the years
-Top keywords by group through the years
+Top keywords by speech (tfidf) ✅
+Top keywords by speaker through the years ✅
+Top keywords by group through the years ✅
 
-Dashboard with search capabilities
+Dashboard with search capabilities ✅
 	and visual charts

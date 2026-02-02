@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +23,7 @@ fun SearchField(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .fillMaxWidth(0.5f)
+            .width(500.dp)
             .height(56.dp)
     ) {
         OutlinedTextField(
@@ -33,9 +34,14 @@ fun SearchField(
                 topEnd = 0.dp,
                 bottomEnd = 0.dp
             ),
+            placeholder = { Text(text = "Search") },
+            maxLines = 1,
+            singleLine = true,
             onValueChange = { newValue ->
                 onAction(ViewModel.Action.UpdateSearchQuery(newValue))
             },
+            modifier = Modifier
+                .weight(1f)
         )
         Button(
             onClick = { onAction(ViewModel.Action.GetResults) },

@@ -1,23 +1,69 @@
 package ir.website.dashboard.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import ir.ehsannarmani.compose_charts.ColumnChart
+import ir.ehsannarmani.compose_charts.extensions.format
+import ir.ehsannarmani.compose_charts.models.BarProperties
+import ir.ehsannarmani.compose_charts.models.Bars
+import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
+import ir.ehsannarmani.compose_charts.models.LabelProperties
+import ir.website.dashboard.components.Dropdown
 
 @Composable
-fun ChartsSection() {
-    Text(
-        text = "Charts Section",
-        textAlign = TextAlign.Center,
+fun ChartsSection(
+    state: ViewModel.State,
+    onAction: (ViewModel.Action) -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Cyan)
-            .height(300.dp),
-    )
+            .fillMaxSize()
+            .height(1000.dp)
+    ) {
+        Dropdown(
+            label = "Select member",
+            value = state.selectedMemberForChart,
+            options = state.members,
+            onOptionSelected = {
+                onAction(ViewModel.Action.GetMemberChartData(it))
+            }
+        )
+        if (state.chartData.isNotEmpty()) {
+            ColumnChart(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .padding(horizontal = 100.dp),
+                data =
+                    state.chartData.map {
+                        Bars(
+                            label = it.key,
+                            values = listOf(
+                                Bars.Data(value = it.value, color = SolidColor(Color.Red)),
+                            )
+                        )
+                    },
+                barProperties = BarProperties(
+                    cornerRadius = Bars.Data.Radius.Rectangle(topRight = 6.dp, topLeft = 6.dp),
+                    spacing = 3.dp,
+                    thickness = 20.dp
+                ),
+                labelProperties = LabelProperties(
+                    enabled = true,
+                    rotation = LabelProperties.Rotation(
+                        mode = LabelProperties.Rotation.Mode.Force
+                    )
+                ),
+                indicatorProperties = HorizontalIndicatorProperties(
+                    enabled = true,
+                    contentBuilder = { value -> value.format(3) })
+            )
+        }
+    }
 }

@@ -11,7 +11,7 @@ plugins {
 kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        browser()
+        browser {}
         binaries.executable()
     }
 

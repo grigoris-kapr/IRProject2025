@@ -10,4 +10,4 @@ Development image from base image that installs python dependencies:
 
 Runs the backend server:
 
-`uvicorn backend:app --reload`
+`uvicorn src.backend:app --reload`

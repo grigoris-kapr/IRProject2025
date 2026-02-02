@@ -17,7 +17,10 @@ RUN pip3 install \
 	gensim \
 	fastapi \
 	uvicorn \ 
-	pydantic
+	pydantic \
+	matplotlib \
+	pyarrow \ 
+	fastparquet
 
 # Setup port for FastAPI
 EXPOSE 8000

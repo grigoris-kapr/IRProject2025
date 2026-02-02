@@ -1,71 +1,51 @@
-from gensim import corpora, models, similarities
-import pandas as pd
+import csv
+from gensim import models
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from Models import Models
+from tqdm import tqdm
 
-N_ROWS = 100_000
+# N_ROWS = 100_000
 # Load data and models
-dataset = pd.read_csv("dataset/clean.csv", index_col=0, nrows=N_ROWS)
+# dataset = pd.read_csv("src/dataset/clean.csv", index_col=0, nrows=N_ROWS)
 
-try:
-    dictionary = corpora.Dictionary.load("models/greek.dict")
-    print("Dictionary loaded from file.")
-except FileNotFoundError:
-    raise Exception("Dictionary file not found. Please build the models first.")
-
-try:
-    tfidf_model = models.TfidfModel.load("models/greek.tfidf")
-    print("TF-IDF model loaded from file.")
-except FileNotFoundError:
-    raise Exception("TF-IDF model file not found. Please build the models first.")
-
-try:
-    lsi_model = models.LsiModel.load("models/greek.lsi")
-    print("LSI model loaded from file.")
-except FileNotFoundError:
-    raise Exception("LSI model file not found. Please build the models first.")
-
-try:
-    index = similarities.Similarity.load("models/index/greek.lsi", mmap='r')
-    print("Similarity index loaded from file.")
-except FileNotFoundError:
-    raise Exception("Similarity index file not found. Please build the models first.")
+models = Models()
 
 # =================================================
-# Recreate corpus
+# Extract keywords
 # =================================================
+def extract_keywords(bow, top_n = 5):
+    tfidf_vector = models.tfidf[bow]
+    # get the top scoring keywords from the tfidf vector
+    keyword_scores = [(keyword, score) for term_id, score in tfidf_vector for keyword in [models.dictionary[term_id]]]
+    sorted_keywords = sorted(keyword_scores, key=lambda x: x[1], reverse=True)
+    return sorted_keywords[:top_n]
+with open("src/stats/keywords.csv","w") as f:
+    writer = csv.writer(f)
+    writer.writerow(["index", "member_name", "government", "keywords", "keyword_scores"])
 
-def token_stream():
-    for speech in dataset.clean_speech:
-        tokens = speech.split()
-        yield tokens
+    for idx, bow in enumerate(tqdm(models.corpus)):
+        top_keywords = extract_keywords(bow)
+        keywords, scores = zip(*top_keywords) if top_keywords else ([], [])
+        member_name = models.dataset.iloc[idx]['member_name']
+        government = models.dataset.iloc[idx]['government']
+        writer.writerow([idx, member_name, government, "|".join(keywords), "|".join(f"{score:.4f}" for score in scores)])
 
-class BowCorpus:
-    def __init__(self, dictionary):
-        self.dictionary = dictionary
 
-    def __iter__(self):
-        for tokens in token_stream():
-            yield self.dictionary.doc2bow(tokens)
-
-    def __getitem__(self, index):
-        tokens = dataset.clean_speech[index].split()
-        return self.dictionary.doc2bow(tokens)
     
-corpus = BowCorpus(dictionary)
 
 # Extract top topics
 
-with open("stats/Top Topics.txt","w") as f:
-    tVectors = lsi_model.projection.s
+with open("src/stats/Top Topics.txt","w") as f:
+    tVectors = models.lsi.projection.s
     for t in range(10):
-        top_words_with_contribution = lsi_model.show_topic(t)
+        top_words_with_contribution = models.lsi.show_topic(t)
         top_words = []
         for word, contr in top_words_with_contribution:
             top_words.append(word)
         print(  f"Topic {t} \n" + \
                 f"\tScore: {tVectors[t]:6.2f}\n" + \
-                f"\tTop Words: {" ".join(top_words)}",
+                f"\tTop Words: {' '.join(top_words)}",
                 file=f)
     
 # =================================================
@@ -76,9 +56,9 @@ import sklearn
 import matplotlib.pyplot as plt
 
 # Get LSI vectors for all speeches as numpy array
-lsi_speeches = lsi_model[tfidf_model[corpus]]
+lsi_speeches = models.lsi[models.tfidf[models.corpus]]
 
-speeches_dense = np.zeros((len(dataset), lsi_model.num_topics))
+speeches_dense = np.zeros((len(models.dataset), models.lsi.num_topics))
 for i, vec in enumerate(lsi_speeches):
     for idx, value in vec:
         speeches_dense[i, idx] = value
@@ -118,16 +98,15 @@ plt.show()
 # =================================================
 
 # Store speeches of each speaker as its own set of speech ids to be used as mask on the DF and speeches_dense matrixes
-speakers = dataset['member_name'].unique().to_numpy()
+speakers = models.dataset['member_name'].unique().to_numpy()
 
 print(speeches_dense.shape)
 print(len(speakers))
-print(len(dataset))
-
+print(len(models.dataset))
 speaker_vectors = {}
 all_ids_count = 0
 for speaker in speakers:
-    speech_ids = np.where(dataset['member_name'] == speaker)[0]
+    speech_ids = np.where(models.dataset['member_name'] == speaker)[0]
     all_ids_count += len(speech_ids)
     try:
         speaker_vectors[speaker] = speeches_dense[speech_ids].mean(axis=0)
@@ -158,7 +137,7 @@ upper_tri_values = speaker_distances[upper_tri_indices]
 top_k_indices = np.argpartition(upper_tri_values, -K_CLOSEST_SPEAKER_PAIRS)[-K_CLOSEST_SPEAKER_PAIRS:]
 closest_pairs = [(upper_tri_indices[0][i], upper_tri_indices[1][i], upper_tri_values[i]) for i in top_k_indices]
 
-with open("stats/Closest Speakers.txt","w") as f:
+with open("src/stats/Closest Speakers.txt","w") as f:
     for speaker_id1, speaker_id2, similarity in sorted(closest_pairs, key=lambda x: -x[2]):
         speaker_name1 = speaker_id_to_name[speaker_id1]
         speaker_name2 = speaker_id_to_name[speaker_id2]
