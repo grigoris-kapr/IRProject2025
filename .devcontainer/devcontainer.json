@@ -11,7 +11,8 @@
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
-				"ms-toolsai.jupyter"
+				"ms-toolsai.jupyter",
+				"adamviola.parquet-explorer"
 			]
 		}
 	}

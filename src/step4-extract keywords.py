@@ -1,25 +1,34 @@
 from Models import Models
-import csv
 from tqdm import tqdm
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 models = Models()
 
 def extract_keywords(bow, top_n = 5):
 	tfidf_vector = models.tfidf[bow]
-	# get the top scoring keywords from the tfidf vector
 	keyword_scores = [(keyword, score) for term_id, score in tfidf_vector for keyword in [models.dictionary[term_id]]]
 	sorted_keywords = sorted(keyword_scores, key=lambda x: x[1], reverse=True)
 	return sorted_keywords[:top_n]
 
-with open("src/stats/keywords.csv","w") as f:
-	writer = csv.writer(f)
-	writer.writerow(["index", "member_name", "political_party","government", "keywords", "keyword_scores"])
+rows = []
 
-	for idx, bow in enumerate(tqdm(models.corpus)):
+members = models.dataset["member_name"].to_numpy()
+political_parties = models.dataset["political_party"].to_numpy()
+governments = models.dataset["government"].to_numpy()
 
-		top_keywords = extract_keywords(bow)
-		keywords, scores = zip(*top_keywords) if top_keywords else ([], [])
-		member_name = models.dataset.iloc[idx]['member_name']
-		political_party = models.dataset.iloc[idx]['political_party']
-		government = models.dataset.iloc[idx]['government']
-		writer.writerow([idx, member_name, political_party, government, "|".join(keywords), "|".join(f"{score:.4f}" for score in scores)])
+for idx, bow in enumerate(tqdm(models.corpus)):
+    top_keywords = extract_keywords(bow)
+    keywords, scores = zip(*top_keywords) if top_keywords else ([], [])
+
+    rows.append({
+        "index": idx,
+        "member_name": members[idx],
+        "political_party": political_parties[idx],
+        "government": governments[idx],
+        "keywords": list(keywords),
+        "keyword_scores": [float(s) for s in scores],
+    })
+
+table = pa.Table.from_pylist(rows)
+pq.write_table(table, "src/stats/keywords.parquet", compression="snappy")

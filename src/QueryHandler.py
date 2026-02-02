@@ -2,18 +2,16 @@ from src.Models import Models
 import pandas as pd
 import heapq
 import numpy as np
+from scipy.spatial.distance import cosine
 
 class QueryHandler:
 	def __init__(self):
 		self.models = Models()
 
 	def get_keywords_for_index(self, index):
-		if index in self.models.keywords.index:
-			row = self.models.keywords.loc[index]
-			keywords = row['keywords'].split("|") if pd.notna(row['keywords']) else []
-			return keywords
-		else:
-			return []
+		row = self.models.keywords.loc[index]
+		keywords = row['keywords'] if pd.notna(row['keywords']).all() else []
+		return keywords
 		
 	def get_relevant_documents(self, query_text):
 		processed_query = self.models.light_pipeline.annotate(query_text)["clean_lemma"]
@@ -23,7 +21,7 @@ class QueryHandler:
 		
 		results = []
 		for doc_position, _ in self.models.index[query_lsi]:
-			speech = self.models.dataset.speech[doc_position]
+			speech = self.models.dataset.speech.iloc[doc_position]
 			keywords = self.get_keywords_for_index(doc_position)
 			results.append((speech, keywords))
 		
@@ -36,9 +34,9 @@ class QueryHandler:
 		for government, group in grouped:
 			heap = []
 			for _, row in group.iterrows():
-				if pd.notna(row['keywords']) and pd.notna(row['keyword_scores']):
-					keywords = row['keywords'].split("|")
-					scores = list(map(float, row['keyword_scores'].split("|")))
+				if pd.notna(row['keywords']).all() and pd.notna(row['keyword_scores']).all():
+					keywords = row['keywords']
+					scores = list(map(float, row['keyword_scores']))
 					for keyword, score in zip(keywords, scores):
 						heapq.heappush(heap, (-score, keyword))  # Use negative score for max-heap behavior
 			top_keywords = []
@@ -60,9 +58,9 @@ class QueryHandler:
 		for government, group in grouped:
 			heap = []
 			for _, row in group.iterrows():
-				if pd.notna(row['keywords']) and pd.notna(row['keyword_scores']):
-					keywords = row['keywords'].split("|")
-					scores = list(map(float, row['keyword_scores'].split("|")))
+				if pd.notna(row['keywords']).all() and pd.notna(row['keyword_scores']).all():
+					keywords = row['keywords']
+					scores = list(map(float, row['keyword_scores']))
 					for keyword, score in zip(keywords, scores):
 						heapq.heappush(heap, (-score, keyword))  # Use negative score for max-heap behavior
 			top_keywords = []
@@ -92,7 +90,7 @@ class QueryHandler:
 				vectors.append(np.array(group["average_lsi_vector"]))
 			if vectors:
 				mean_vector = np.mean(vectors, axis=0)
-				error = np.linalg.norm(member_vector - mean_vector)
-				errors[government] = error.item()
+				error = cosine(member_vector, mean_vector)
+				errors[government] = error
 				
 		return errors
