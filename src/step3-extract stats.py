@@ -36,17 +36,40 @@ with open("src/stats/keywords.csv","w") as f:
 
 # Extract top topics
 
+NUM_TOPICS = 10
+
 with open("src/stats/Top Topics.txt","w") as f:
     tVectors = models.lsi.projection.s
-    for t in range(10):
+    for t in range(NUM_TOPICS):
         top_words_with_contribution = models.lsi.show_topic(t)
         top_words = []
         for word, contr in top_words_with_contribution:
             top_words.append(word)
         print(  f"Topic {t} \n" + \
                 f"\tScore: {tVectors[t]:6.2f}\n" + \
-                f"\tTop Words: {' '.join(top_words)}",
+                f"\tTop Words: {' '.join(top_words)}\n\n",
                 file=f)
+        
+    # Also, print salient words for topics by capturing the LSI model's log
+    import io
+    import logging
+
+    log_stream = io.StringIO()
+    handler = logging.StreamHandler(log_stream)
+    handler.setLevel(logging.INFO)   # ignore DEBUG messages
+    handler.setFormatter(logging.Formatter('%(message)s'))
+
+    logger = logging.getLogger('gensim')
+    logger.addHandler(handler)
+
+    models.lsi.print_debug(num_topics=NUM_TOPICS, num_words=10)
+
+    logger.removeHandler(handler)
+
+    # print to same file
+    print(log_stream.getvalue(), file=f)
+
+
     
 # =================================================
 # Cluster speeches and plot 3D
